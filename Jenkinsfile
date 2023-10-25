@@ -57,7 +57,7 @@ spec:
         EPHTEST_BASE_URL = "http://$EPHTEST_CONTAINER_NAME:$APP_LISTENING_PORT".concat("/$APP_CONTEXT_ROOT".replace('//', '/'))
 
         // credentials
-        KUBERNETES_CLUSTER_CRED_ID = 'config'
+        KUBERNETES_CLUSTER_CRED_ID = '2078e9f4-1c00-4a62-ab4e-31dc72b177a9'
         CONTAINER_REGISTRY_CRED = credentials("docker-hub-$IMAGE_ORG")
     }
         stages {
