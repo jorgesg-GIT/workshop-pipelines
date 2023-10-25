@@ -60,6 +60,31 @@ spec:
         KUBERNETES_CLUSTER_CRED_ID = 'k3s-lima-vm-kubeconfig'
         CONTAINER_REGISTRY_CRED = credentials("docker-hub-$IMAGE_ORG")
     }
+        stages {
+                stage('Prepare environment') {
+                    steps {
+                        echo '-=- prepare environment -=-'
+                        echo "APP_NAME: ${APP_NAME}\nAPP_VERSION: ${APP_VERSION}"
+                        echo "the name for the epheremeral test container to be created is: $EPHTEST_CONTAINER_NAME"
+                        echo "the base URL for the epheremeral test container is: $EPHTEST_BASE_URL"
+                        sh 'java -version'
+                        sh './mvnw --version'
+                        container('podman') {
+                            sh 'podman --version'
+                            sh "podman login $CONTAINER_REGISTRY_URL -u $CONTAINER_REGISTRY_CRED_USR -p $CONTAINER_REGISTRY_CRED_PSW"
+                        }
+                        container('kubectl') {
+                            withKubeConfig([credentialsId: "$KUBERNETES_CLUSTER_CRED_ID"]) {
+                                sh 'kubectl version'
+                            }
+                        }
+                        script {
+                            qualityGates = readYaml file: 'quality-gates.yaml'
+                        }
+                    }
+                }
+        }
+
 }
 
 def getPomVersion() {
