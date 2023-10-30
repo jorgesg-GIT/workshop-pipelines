@@ -1,19 +1,4 @@
 apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: ci-sonarqube-data-pv
-  labels:
-    type: local
-spec:
-  storageClassName: local-path
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/data/ci-sonarqube-data"
----
-apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: ci-sonarqube-data-pvc
@@ -28,21 +13,6 @@ spec:
       storage: 10Gi
 ---
 apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: ci-sonarqube-extensions-pv
-  labels:
-    type: local
-spec:
-  storageClassName: local-path
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/data/ci-sonarqube-extensions"
----
-apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: ci-sonarqube-extensions-pvc
@@ -55,21 +25,6 @@ spec:
   resources:
     requests:
       storage: 1Gi
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: ci-sonarqube-esdata-pv
-  labels:
-    type: local
-spec:
-  storageClassName: local-path
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/data/ci-sonarqube-esdata"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
