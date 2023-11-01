@@ -15,6 +15,16 @@ spec:
       volumeMounts:
         - name: m2-cache
           mountPath: /root/.m2
+    - name: lhci
+      image: docker.io/patrickhulce/lhci-client:0.12.0
+      command:
+        - cat
+      tty: true
+      securityContext:
+        runAsUser: 0
+        privileged: true
+  volumes:
+    - name: m2-cache      
     - name: podman
       image: quay.io/containers/podman:v4.5.1
       command:
@@ -59,6 +69,8 @@ spec:
         // credentials
         KUBERNETES_CLUSTER_CRED_ID = 'config'
         CONTAINER_REGISTRY_CRED = credentials("docker-hub-$IMAGE_ORG")
+        LIGHTHOUSE_TOKEN = credentials("ci-lighthouse-token-$APP_NAME")
+        LIGHTHOUSE_URL = credentials('ci-lighthouse-url')
     }
         stages {
                 stage('Prepare environment') {
@@ -191,20 +203,26 @@ spec:
                     steps {
                         echo '-=- run software composition analysis -=-'
                         sh './mvnw dependency-check:check'
-                        dependencyCheckPublisher(
-                            failedTotalCritical: qualityGates.security.dependencies.critical.failed,
-                            unstableTotalCritical: qualityGates.security.dependencies.critical.unstable,
-                            failedTotalHigh: qualityGates.security.dependencies.high.failed,
-                            unstableTotalHigh: qualityGates.security.dependencies.high.unstable,
-                            failedTotalMedium: qualityGates.security.dependencies.medium.failed,
-                            unstableTotalMedium: qualityGates.security.dependencies.medium.unstable)
-                        script {
-                            if (currentBuild.result == 'FAILURE') {
-                                error('Dependency vulnerabilities exceed the configured threshold')
-                            }
+                        dependencyCheckPublisher
                         }    
                     }
                 }
+                
+                stage('Web page performance analysis') {
+                    steps {
+                        echo '-=- execute web page performance analysis -=-'
+                        container('lhci') {
+                            sh """
+                            cd $WORKSPACE
+                            git config --global --add safe.directory $WORKSPACE
+                            export LHCI_BUILD_CONTEXT__CURRENT_BRANCH=$GIT_BRANCH
+                            lhci collect --collect.settings.chromeFlags='--no-sandbox' --url ${EPHTEST_BASE_URL}hello
+                            lhci assert --preset=lighthouse:recommended --includePassedAssertions
+                            lhci upload --token $LIGHTHOUSE_TOKEN --serverBaseUrl $LIGHTHOUSE_URL --ignoreDuplicateBuildFailure
+                            """
+                        }
+                    }
+        }
 
             }
     post {
