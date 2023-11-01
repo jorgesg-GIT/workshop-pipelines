@@ -180,12 +180,31 @@ spec:
                         echo '-=- run code inspection & check quality gate -=-'
                         withSonarQubeEnv('ci-sonarqube') {
                             sh './mvnw sonar:sonar'
-                }
+                        }
                     timeout(time: 10, unit: 'MINUTES') {
                         waitForQualityGate abortPipeline: true
+                        }
+                    }
                 }
-            }
-        }
+
+                stage('Software composition analysis') {
+                    steps {
+                        echo '-=- run software composition analysis -=-'
+                        sh './mvnw dependency-check:check'
+                        dependencyCheckPublisher(
+                            failedTotalCritical: qualityGates.security.dependencies.critical.failed,
+                            unstableTotalCritical: qualityGates.security.dependencies.critical.unstable,
+                            failedTotalHigh: qualityGates.security.dependencies.high.failed,
+                            unstableTotalHigh: qualityGates.security.dependencies.high.unstable,
+                            failedTotalMedium: qualityGates.security.dependencies.medium.failed,
+                            unstableTotalMedium: qualityGates.security.dependencies.medium.unstable)
+                        script {
+                            if (currentBuild.result == 'FAILURE') {
+                                error('Dependency vulnerabilities exceed the configured threshold')
+                            }
+                        }    
+                    }
+                }
 
             }
     post {
