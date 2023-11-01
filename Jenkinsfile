@@ -23,8 +23,6 @@ spec:
       securityContext:
         runAsUser: 0
         privileged: true
-  volumes:
-    - name: m2-cache      
     - name: podman
       image: quay.io/containers/podman:v4.5.1
       command:
