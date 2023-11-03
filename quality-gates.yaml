@@ -1,10 +1,33 @@
----
-spec_version: "1.0"
-qualityGates:
-  performance:
-    throughput:
-      error: 
-        failed: 100
-        unestable: 80
-        response:
-          unstable: 60
+performance:
+  throughput:
+    error:
+      unstable: 0
+      failed: 5
+    response:
+      unstable: 'default.jtl:100'
+ 
+security:
+  static:
+    high:
+      unstable: 0
+      failed: 0
+    medium:
+      unstable: 0
+      failed: 5
+  dynamic:
+    high:
+      unstable: 0
+      failed: 0
+    medium:
+      unstable: 0
+      failed: 5
+  dependencies:
+    critical:
+      unstable: 10
+      failed: 10
+    high:
+      unstable: 10
+      failed: 10
+    medium:
+      unstable: 15
+      failed: 15

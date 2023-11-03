@@ -167,7 +167,11 @@ spec:
                         echo '-=- execute performance tests -=-'
                         sh "curl --retry 10 --retry-connrefused --connect-timeout 5 --max-time 5 ${EPHTEST_BASE_URL}actuator/health"
                         sh "./mvnw jmeter:configure@configuration jmeter:jmeter jmeter:results -Djmeter.target.host=$EPHTEST_CONTAINER_NAME -Djmeter.target.port=$APP_LISTENING_PORT -Djmeter.target.root=$APP_CONTEXT_ROOT"
-                        perfReport sourceDataFiles: 'target/jmeter/results/*.csv'
+                        perfReport(
+                            sourceDataFiles: 'target/jmeter/results/*.csv',
+                            errorUnstableThreshold: qualityGates.performance.throughput.error.unstable,
+                            errorFailedThreshold: qualityGates.performance.throughput.error.failed,
+                            errorUnstableResponseTimeThreshold: qualityGates.performance.throughput.response.unstable)
                     }
                 }
                 
@@ -201,8 +205,20 @@ spec:
                     steps {
                         echo '-=- run software composition analysis -=-'
                         sh './mvnw dependency-check:check'
-                        }    
+                        dependencyCheckPublisher(
+                            failedTotalCritical: qualityGates.security.dependencies.critical.failed,
+                            unstableTotalCritical: qualityGates.security.dependencies.critical.unstable,
+                            failedTotalHigh: qualityGates.security.dependencies.high.failed,
+                            unstableTotalHigh: qualityGates.security.dependencies.high.unstable,
+                            failedTotalMedium: qualityGates.security.dependencies.medium.failed,
+                            unstableTotalMedium: qualityGates.security.dependencies.medium.unstable)
+                        script {
+                            if (currentBuild.result == 'FAILURE') {
+                                error('Dependency vulnerabilities exceed the configured threshold')
+                            }
+                        }
                     }
+                }
                 
                 
                 stage('Web page performance analysis') {
