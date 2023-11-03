@@ -237,7 +237,7 @@ spec:
                     }
                 }
         
-            
+        }    
 
                 post {
                     always {
@@ -251,9 +251,9 @@ spec:
                         }
                     }
                 }
-        }
+    }
 
-}
+
 def getPomVersion() {
     return readMavenPom().version
 }
